@@ -1,0 +1,22 @@
+version: "3"
+
+tasks:
+    build:
+        desc: Build the application
+        cmds:
+            - go build -o ./dist/picourl-backend .
+
+    start:
+        desc: Run the compiled application
+        cmds:
+            - ./dist/picourl-backend
+
+    run:
+        desc: Run the application
+        cmds:
+            - go run .
+
+    dev:
+        desc: Run the application in development mode (requires gow installed)
+        cmds:
+            - gow run .

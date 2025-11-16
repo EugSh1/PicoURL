@@ -1,0 +1,5 @@
+.DS_Store
+.env*
+sqlc.ymls
+taskfile.yml
+dist

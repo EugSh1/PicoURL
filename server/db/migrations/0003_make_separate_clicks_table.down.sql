@@ -1,0 +1,5 @@
+DROP INDEX IF EXISTS idx_clicks_link_id;
+
+ALTER TABLE links ADD COLUMN clicks INT DEFAULT 0 NOT NULL;
+
+DROP TABLE clicks;

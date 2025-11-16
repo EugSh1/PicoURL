@@ -1,0 +1,4 @@
+CREATE TABLE links (
+    id VARCHAR(6) PRIMARY KEY,
+    url TEXT NOT NULL
+);

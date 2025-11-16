@@ -1,0 +1,20 @@
+{
+    "name": "picourl",
+    "scripts": {
+        "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:client\"",
+        "dev:server": "cd server && task dev",
+        "dev:client": "cd client && pnpm run dev",
+        "start": "concurrently \"pnpm run start:server\" \"pnpm run start:client\"",
+        "start:server": "cd server && task build && task start",
+        "start:client": "cd client && pnpm run build && pnpm run preview",
+        "services:start": "docker compose up -d",
+        "services:stop": "docker compose down",
+        "demo:start": "docker compose -f compose.prod.yml up --build -d",
+        "demo:stop": "docker compose -f compose.prod.yml down"
+    },
+    "author": "EugSh1",
+    "license": "MIT",
+    "devDependencies": {
+        "concurrently": "^9.2.1"
+    }
+}
