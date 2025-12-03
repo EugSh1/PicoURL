@@ -1,5 +1,5 @@
 .DS_Store
 .env*
-sqlc.ymls
+sqlc.yml
 taskfile.yml
 dist
