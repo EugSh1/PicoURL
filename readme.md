@@ -44,6 +44,7 @@ analytics.
 -   **pgx + sqlc**: Safe, low-level PostgreSQL queries.
 -   **PostgreSQL**: Reliable, production-grade database.
 -   **Redis**: Caching & rate limiting.
+-   **singleflight**: Cache stampede protection.
 -   **golang-migrate**: Schema migrations.
 
 **DevOps & Testing:**
