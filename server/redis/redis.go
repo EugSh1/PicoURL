@@ -3,10 +3,16 @@ package redis
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
+	"picourl-backend/logger"
+	"time"
 
 	"github.com/redis/go-redis/v9"
+)
+
+const (
+	defaultRedisHost = "localhost"
+	defaultRedisPort = "6379"
 )
 
 var RedisClient *redis.Client
@@ -14,17 +20,28 @@ var RedisClient *redis.Client
 func SetupRedis() {
 	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
-		redisHost = "localhost"
+		logger.Log.Info(
+			"Redis environment variable not set, using default",
+			"var", "REDIS_HOST",
+			"defaultValue", defaultRedisHost,
+		)
+		redisHost = defaultRedisHost
 	}
 
 	redisPort := os.Getenv("REDIS_PORT")
 	if redisPort == "" {
-		redisPort = "6379"
+		logger.Log.Info(
+			"Redis environment variable not set, using default",
+			"var", "REDIS_PORT",
+			"defaultValue", defaultRedisPort,
+		)
+		redisPort = defaultRedisPort
 	}
 
 	redisPassword := os.Getenv("REDIS_PASSWORD")
 	if redisPassword == "" {
-		log.Fatal("Required database environment variable REDIS_PASSWORD not set")
+		logger.Log.Error("Required redis environment variable not set", "var", "REDIS_PASSWORD")
+		os.Exit(1)
 	}
 
 	RedisClient = redis.NewClient(&redis.Options{
@@ -32,8 +49,12 @@ func SetupRedis() {
 		Password: redisPassword,
 	})
 
-	err := RedisClient.Ping(context.Background()).Err()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := RedisClient.Ping(ctx).Err()
 	if err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		logger.Log.Error("Failed to connect to Redis", "error", err)
+		os.Exit(1)
 	}
 }

@@ -3,7 +3,7 @@ package utils
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"picourl-backend/logger"
 	"picourl-backend/redis"
 	"time"
 )
@@ -20,7 +20,7 @@ func CacheResult(key string, data any, cacheTTL time.Duration) {
 	default:
 		jsonBytes, err := json.Marshal(data)
 		if err != nil {
-			log.Println("JSON marshal error for cache:", key, "error:", err)
+			logger.Log.Warn("JSON marshal error", "key", key, "error", err)
 			return
 		}
 
@@ -29,6 +29,6 @@ func CacheResult(key string, data any, cacheTTL time.Duration) {
 
 	err := redis.RedisClient.Set(ctx, key, payload, cacheTTL).Err()
 	if err != nil {
-		log.Println("Failed to add data to the redis cache:", key, "error:", err)
+		logger.Log.Warn("Failed to add data to the redis cache", "key", key, "error", err)
 	}
 }

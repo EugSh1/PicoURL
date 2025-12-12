@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"picourl-backend/db"
 	"picourl-backend/db/generated"
+	"picourl-backend/logger"
 	"picourl-backend/redis"
 	requestgroup "picourl-backend/request_group"
 	"picourl-backend/utils"
@@ -31,14 +31,14 @@ func updateStats(cacheKey, id, url, referrer string) {
 	})
 
 	if err != nil {
-		log.Println("Failed to create click for link with id:", id, "error:", err)
+		logger.Log.Error("Failed to create click for link", "linkId", id, "error", err)
 		return
 	}
 
 	count, err := db.Queries.CountRecentClicks(ctx, id)
 
 	if err != nil {
-		log.Println("Failed to count recent clicks for link with id:", id, "error:", err)
+		logger.Log.Error("Failed to count recent clicks for link", "linkId", id, "error", err)
 		return
 	}
 
@@ -73,7 +73,7 @@ func Resolve(c *gin.Context) {
 
 		link, err := db.Queries.GetLinkById(dbCtx, id)
 		if err != nil {
-			log.Println("an error occurred in resolve handler", err)
+			logger.Log.Error("Error getting link by id", "linkId", id, "error", err)
 
 			if err == pgx.ErrNoRows {
 				utils.CacheResult(cacheKey, "not_found", 5*time.Minute)
@@ -109,7 +109,7 @@ func Resolve(c *gin.Context) {
 
 	resultLink, ok := result.(string)
 	if !ok {
-		log.Println("error: singleflight returned non-string result without error in resolve handler")
+		logger.Log.Error("singleflight returned non-string result without error in resolve handler", "result", result)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Internal Server Error",
 		})

@@ -1,20 +1,25 @@
 package main
 
 import (
-	"log"
+	"os"
 	"picourl-backend/db"
 	"picourl-backend/handlers"
+	"picourl-backend/logger"
 	"picourl-backend/middleware"
 	"picourl-backend/redis"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	sloggin "github.com/samber/slog-gin"
 )
 
 func main() {
+	logger.Init()
+	logger.Log.Info("Starting PicoURL server...")
+
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Warning: .env file not found, using system environment variables")
+		logger.Log.Info("Env file not found, using system environment variables")
 	}
 
 	closeConn := db.SetupDb()
@@ -23,11 +28,14 @@ func main() {
 	redis.SetupRedis()
 
 	if redis.RedisClient == nil {
-		log.Fatal("Failed to initialize Redis client")
+		logger.Log.Error("Failed to initialize Redis client, redisClient is nil")
+		os.Exit(1)
 	}
 
-	r := gin.Default()
+	r := gin.New()
 
+	r.Use(sloggin.New(logger.Log))
+	r.Use(gin.Recovery())
 	r.Use(middleware.CreateRateLimit())
 	r.Use(middleware.SecurityHeaders)
 

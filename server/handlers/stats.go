@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"picourl-backend/db"
+	"picourl-backend/logger"
 	"picourl-backend/redis"
 	requestgroup "picourl-backend/request_group"
 	"picourl-backend/utils"
@@ -44,7 +44,7 @@ func Stats(c *gin.Context) {
 
 		stats, err := db.Queries.GetWeeklyClickStats(dbCtx, id)
 		if err != nil {
-			log.Println("an error occurred in stats handler", err)
+			logger.Log.Error("Error getting weekly click stats", "error", err)
 			return nil, &ErrorGettingStats{
 				message:    "Internal Server Error",
 				statusCode: http.StatusInternalServerError,

@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"picourl-backend/db"
 	"picourl-backend/db/generated"
+	"picourl-backend/logger"
 	"picourl-backend/utils"
 	"strings"
 
@@ -36,7 +36,7 @@ func Shorten(c *gin.Context) {
 		if err == nil && err2 == nil {
 			if strings.EqualFold(baseURL.Host, inputURL.Host) {
 				c.JSON(http.StatusBadRequest, gin.H{
-					"error": "you can’t shorten a link that already belongs to PicoURL.",
+					"error": "you can't shorten a link that already belongs to PicoURL.",
 				})
 				return
 			}
@@ -45,7 +45,7 @@ func Shorten(c *gin.Context) {
 
 	shortUrlId, err := utils.GenerateUniqueShortId(c.Request.Context())
 	if err != nil {
-		log.Println(err)
+		logger.Log.Error("Error generating unique short id", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "failed to generate unique short ID for a url",
 		})
@@ -57,7 +57,7 @@ func Shorten(c *gin.Context) {
 		Url: body.Url,
 	})
 	if err != nil {
-		log.Println("an error occurred in shorten handler while creating a link", err)
+		logger.Log.Error("Error creating link", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "failed to save URL",
 		})
