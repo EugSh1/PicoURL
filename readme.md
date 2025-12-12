@@ -11,7 +11,12 @@ analytics.
 -   **Instant Shortening** ⚡️
     -   Create short URLs in milliseconds using a compact Base62 ID generator.
 -   **Smart Caching** 🧠
-    -   Redis-powered caching for fast redirect handling.
+    -   Redis-powered caching for fast redirects and statistics.
+    -   Cache Stampede Protection using the `singleflight` pattern to prevent database overload
+        under heavy load.
+    -   Includes negative caching to avoid lookups for non-existent links.
+-   **QR Code Generation** 📲
+    -   Instantly generate and display a QR code for any shortened URL.
 -   **Accurate Statistics** 📊
     -   Referrer analytics for the last 7 days.
 -   **Rate Limiting** 🚦
@@ -53,11 +58,13 @@ analytics.
 1. **Shorten a URL**
     - Enter a long URL and get a short, compact link instantly.
 2. **Redirect**
-    - Visiting /abc123 immediately resolves to the original target URL. Popular links are cached in
-      redis.
-3. **View Statistics**
+    - Visiting /abc123 immediately resolves to the original target URL. Popular links and statistics
+      are cached in redis.
+3. **Get a QR Code**
+    - Instantly view and use the QR code for your new short URL.
+4. **View Statistics**
     - View the number of clicks by referrers.
-4. **Rate Limiting**
+5. **Rate Limiting**
     - Every endpoint is automatically protected.
 
 ### Running the Demo
