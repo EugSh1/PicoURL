@@ -7,6 +7,8 @@ import (
 	"picourl-backend/db"
 	"picourl-backend/db/generated"
 	"picourl-backend/redis"
+	requestgroup "picourl-backend/request_group"
+	"picourl-backend/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,11 +18,10 @@ import (
 
 const (
 	updateStatsTimeout        = 10 * time.Second
-	cacheEligibilityThreshold = 15
-	cacheTTL                  = 3 * 24 * time.Hour
+	cacheEligibilityThreshold = 5
 )
 
-func updateStats(id, foundLinkUrl, referrer string) {
+func updateStats(cacheKey, id, url, referrer string) {
 	ctx, cancel := context.WithTimeout(context.Background(), updateStatsTimeout)
 	defer cancel()
 
@@ -42,51 +43,78 @@ func updateStats(id, foundLinkUrl, referrer string) {
 	}
 
 	if count >= cacheEligibilityThreshold {
-		err := redis.RedisClient.Set(ctx, id, foundLinkUrl, cacheTTL).Err()
-		if err != nil {
-			log.Println("Failed to add link to the redis cache:", id, "error:", err)
-		}
+		utils.CacheResult(cacheKey, url, 3*24*time.Hour)
 	}
 }
 
 func Resolve(c *gin.Context) {
 	id := c.Param("id")
+	referrer := c.Request.Referer()
 	ctx := c.Request.Context()
 
-	var foundLink string
+	cacheKey := "url:" + id
 
-	foundLinkFromRedis, err := redis.RedisClient.Get(ctx, id).Result()
-
+	link, err := redis.RedisClient.Get(ctx, cacheKey).Result()
 	if err == nil {
-		foundLink = foundLinkFromRedis
-	} else {
-		foundLinkFromDb, err := db.Queries.GetLinkById(ctx, id)
-		if err != nil {
-			log.Println("an error occurred in resolve handler", err)
-
-			var status int
-			var errorMessage string
-
-			if err == pgx.ErrNoRows {
-				status = http.StatusNotFound
-				errorMessage = "Not Found"
-			} else {
-				status = http.StatusInternalServerError
-				errorMessage = "Internal Server Error"
-			}
-
-			c.JSON(status, gin.H{
-				"error": errorMessage,
-			})
+		if link == "not_found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 			return
 		}
 
-		foundLink = foundLinkFromDb.Url
+		c.Redirect(http.StatusFound, link)
+
+		go updateStats(cacheKey, id, link, referrer)
+		return
 	}
 
-	c.Redirect(http.StatusFound, foundLink)
+	result, err, _ := requestgroup.Group.Do(cacheKey, func() (any, error) {
+		dbCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
-	referrer := c.Request.Referer()
+		link, err := db.Queries.GetLinkById(dbCtx, id)
+		if err != nil {
+			log.Println("an error occurred in resolve handler", err)
 
-	go updateStats(id, foundLink, referrer)
+			if err == pgx.ErrNoRows {
+				utils.CacheResult(cacheKey, "not_found", 5*time.Minute)
+			}
+
+			return nil, err
+		}
+
+		url := link.Url
+
+		updateStats(cacheKey, id, url, referrer)
+
+		return url, nil
+	})
+
+	if err != nil {
+		var status int
+		var errorMessage string
+
+		if err == pgx.ErrNoRows {
+			status = http.StatusNotFound
+			errorMessage = "Not Found"
+		} else {
+			status = http.StatusInternalServerError
+			errorMessage = "Internal Server Error"
+		}
+
+		c.JSON(status, gin.H{
+			"error": errorMessage,
+		})
+		return
+	}
+
+	resultLink, ok := result.(string)
+	if !ok {
+		log.Println("error: singleflight returned non-string result without error in resolve handler")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Internal Server Error",
+		})
+		return
+	}
+
+	c.Redirect(http.StatusFound, resultLink)
 }
