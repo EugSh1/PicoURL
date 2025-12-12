@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import type { Tabs } from "../../types";
 import { linkShortIdToUrl } from "../../utils";
+import { QRCodeCanvas } from "qrcode.react";
 
 type Props = {
     shortLinkId: string;
@@ -36,6 +37,9 @@ export default function SuccessTab({ shortLinkId, setTabFn }: Readonly<Props>) {
                 >
                     Copy
                 </button>
+            </div>
+            <div className="w-full flex justify-center">
+                <QRCodeCanvas value={shortUrl} marginSize={1} title={`QR code for ${shortUrl}`} />
             </div>
             <button
                 className="px-1.5 py-1 bg-accent rounded-sm shadow-sm transition-all hover:brightness-110 cursor-pointer"

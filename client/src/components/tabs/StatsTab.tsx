@@ -57,12 +57,20 @@ export default function StatsTab({ shortLinkId, setTabFn }: Readonly<Props>) {
                     />
                 </div>
             )}
-            <button
-                className="px-1.5 py-1 bg-accent rounded-sm shadow-sm transition-all hover:brightness-110 cursor-pointer mt-2"
-                onClick={() => setTabFn("shorten")}
-            >
-                Shorten another URL
-            </button>
+            <div className="max-w-[220px] flex flex-col">
+                <button
+                    className="px-1.5 py-1 bg-accent rounded-sm shadow-sm transition-all hover:brightness-110 cursor-pointer mt-2"
+                    onClick={() => setTabFn("success")}
+                >
+                    Back
+                </button>
+                <button
+                    className="px-1.5 py-1 bg-accent rounded-sm shadow-sm transition-all hover:brightness-110 cursor-pointer mt-2"
+                    onClick={() => setTabFn("shorten")}
+                >
+                    Shorten another URL
+                </button>
+            </div>
         </>
     );
 }
