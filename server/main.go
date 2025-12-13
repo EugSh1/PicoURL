@@ -7,6 +7,7 @@ import (
 	"picourl-backend/logger"
 	"picourl-backend/middleware"
 	"picourl-backend/redis"
+	"picourl-backend/worker"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -31,6 +32,8 @@ func main() {
 		logger.Log.Error("Failed to initialize Redis client, redisClient is nil")
 		os.Exit(1)
 	}
+
+	go worker.Setup()
 
 	r := gin.New()
 

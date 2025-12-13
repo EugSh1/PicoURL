@@ -32,3 +32,7 @@ WHERE link_id = $1 AND created_at >= NOW() - INTERVAL '3 days';
 SELECT referrer, COUNT(*) FROM clicks
 WHERE link_id = $1 AND created_at >= NOW() - INTERVAL '7 days'
 GROUP BY referrer;
+
+-- name: DeleteOldClicks :exec
+DELETE FROM clicks
+WHERE created_at < NOW() - INTERVAL '7 days';

@@ -17,6 +17,9 @@ analytics.
     -   Includes negative caching to avoid lookups for non-existent links.
 -   **QR Code Generation** 📲
     -   Instantly generate and display a QR code for any shortened URL.
+-   **Automatic Database Maintenance** 🧹
+    -   A background worker runs daily to automatically delete click data older than 7 days, keeping
+        the database lean and performant.
 -   **Accurate Statistics** 📊
     -   Referrer analytics for the last 7 days.
 -   **Rate Limiting** 🚦

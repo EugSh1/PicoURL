@@ -59,6 +59,16 @@ func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) error {
 	return err
 }
 
+const deleteOldClicks = `-- name: DeleteOldClicks :exec
+DELETE FROM clicks
+WHERE created_at < NOW() - INTERVAL '7 days'
+`
+
+func (q *Queries) DeleteOldClicks(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, deleteOldClicks)
+	return err
+}
+
 const getLinkById = `-- name: GetLinkById :one
 SELECT id, url FROM links
 WHERE id = $1
