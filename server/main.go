@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"picourl-backend/config"
 	"picourl-backend/db"
 	"picourl-backend/handlers"
 	"picourl-backend/logger"
@@ -23,10 +24,12 @@ func main() {
 		logger.Log.Info("Env file not found, using system environment variables")
 	}
 
-	closeConn := db.SetupDb()
+	cfg := config.Init()
+
+	closeConn := db.SetupDb(cfg)
 	defer closeConn()
 
-	redis.SetupRedis()
+	redis.SetupRedis(cfg)
 
 	if redis.RedisClient == nil {
 		logger.Log.Error("Failed to initialize Redis client, redisClient is nil")
