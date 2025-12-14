@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"fmt"
+	"net"
 	"os"
 	"picourl-backend/config"
 	"picourl-backend/logger"
@@ -15,7 +15,7 @@ var RedisClient *redis.Client
 
 func SetupRedis(cfg *config.Config) {
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort),
+		Addr:     net.JoinHostPort(cfg.RedisHost, cfg.RedisPort),
 		Password: cfg.RedisPassword,
 	})
 

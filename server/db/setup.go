@@ -2,7 +2,8 @@ package db
 
 import (
 	"context"
-	"fmt"
+	"net"
+	"net/url"
 	"os"
 	"picourl-backend/config"
 	"picourl-backend/db/generated"
@@ -17,7 +18,18 @@ import (
 var Queries *generated.Queries
 
 func SetupDb(cfg *config.Config) func() {
-	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresHost, cfg.PostgresPort, cfg.PostgresDB)
+	q := url.Values{}
+	q.Set("sslmode", "disable")
+
+	dsnUrl := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(cfg.PostgresUser, cfg.PostgresPassword),
+		Host:     net.JoinHostPort(cfg.PostgresHost, cfg.PostgresPort),
+		Path:     cfg.PostgresDB,
+		RawQuery: q.Encode(),
+	}
+	connectionString := dsnUrl.String()
+
 	m, err := migrate.New("file://db/migrations", connectionString)
 	if err != nil {
 		logger.Log.Error("Failed to create migrate instance", "error", err)
@@ -30,11 +42,15 @@ func SetupDb(cfg *config.Config) func() {
 		os.Exit(1)
 	}
 
+	poolConfig, err := pgxpool.ParseConfig(connectionString)
+	if err != nil {
+		logger.Log.Error("Failed to parse pgxpool config", "error", err)
+		os.Exit(1)
+	}
+
 	ctx := context.Background()
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", cfg.PostgresHost, cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresDB, cfg.PostgresPort)
-
-	pool, err := pgxpool.New(ctx, dsn)
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		logger.Log.Error("Failed to create pgxpool", "error", err)
 		os.Exit(1)
