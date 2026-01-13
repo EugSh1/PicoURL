@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"embed"
 	"net"
 	"net/url"
 	"os"
@@ -12,8 +13,12 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+//go:embed migrations/*.sql
+var migrationsFS embed.FS
 
 var Queries *generated.Queries
 
@@ -30,7 +35,13 @@ func SetupDb(cfg *config.Config) func() {
 	}
 	connectionString := dsnUrl.String()
 
-	m, err := migrate.New("file://db/migrations", connectionString)
+	sourceDriver, err := iofs.New(migrationsFS, "migrations")
+	if err != nil {
+		logger.Log.Error("Failed to create iofs source driver", "error", err)
+		os.Exit(1)
+	}
+
+	m, err := migrate.NewWithSourceInstance("iofs", sourceDriver, connectionString)
 	if err != nil {
 		logger.Log.Error("Failed to create migrate instance", "error", err)
 		os.Exit(1)

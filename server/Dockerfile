@@ -6,14 +6,13 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -v -o ./picourl-backend .
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o ./picourl-backend .
 
-FROM alpine
+FROM scratch
 
 WORKDIR /
 
 COPY --from=build /app/picourl-backend /picourl-backend
-COPY --from=build /app/db/migrations /db/migrations
 
 ENV GIN_MODE=release
 
